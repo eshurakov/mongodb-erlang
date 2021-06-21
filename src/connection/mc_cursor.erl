@@ -15,7 +15,7 @@
 ]).
 
 -export([
-  start_link/5
+  start_link/6
 ]).
 
 -export([
@@ -28,6 +28,7 @@
 ]).
 
 -record(state, {
+  database :: database(),
   connection :: mc_worker:connection(),
   collection :: atom(),
   cursor :: integer(),
@@ -110,14 +111,15 @@ map(Fun, Cursor, Max) ->
 close(Cursor) ->
   gen_server:cast(Cursor, halt).
 
-start_link(Connection, Collection, Cursor, BatchSize, Batch) ->
-  gen_server:start_link(?MODULE, [self(), Connection, Collection, Cursor, BatchSize, Batch], []).
+start_link(Database, Connection, Collection, Cursor, BatchSize, Batch) ->
+  gen_server:start_link(?MODULE, [self(), Database, Connection, Collection, Cursor, BatchSize, Batch], []).
 
 
 %% @hidden
-init([Owner, Connection, Collection, Cursor, BatchSize, Batch]) ->
+init([Owner, Database, Connection, Collection, Cursor, BatchSize, Batch]) ->
   Monitor = erlang:monitor(process, Owner),
   {ok, #state{
+    database = Database,
     connection = Connection,
     collection = Collection,
     cursor = Cursor,
@@ -179,6 +181,7 @@ next_i(#state{batch = []} = State, Timeout) ->
   Reply = gen_server:call(
     State#state.connection,
     #getmore{
+      database = State#state.database,
       collection = State#state.collection,
       batchsize = State#state.batchsize,
       cursorid = State#state.cursor

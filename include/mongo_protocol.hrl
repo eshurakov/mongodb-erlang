@@ -46,6 +46,7 @@
 }).
 
 -record(getmore, {
+  database :: database(),
   collection :: colldb(),
   batchsize = 0 :: mc_worker_api:batchsize(),
   cursorid :: mc_worker_api:cursorid()
